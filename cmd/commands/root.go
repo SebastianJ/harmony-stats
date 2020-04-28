@@ -31,7 +31,7 @@ var (
 
 func init() {
 	config.Args = config.PersistentFlags{}
-	RootCmd.PersistentFlags().StringVar(&config.Args.Network, "network", "pangaea", "--network <name>")
+	RootCmd.PersistentFlags().StringVar(&config.Args.Network, "network", "stressnet", "--network <name>")
 	RootCmd.PersistentFlags().StringVar(&config.Args.Mode, "mode", "api", "--mode <mode>")
 	RootCmd.PersistentFlags().StringVar(&config.Args.Node, "node", "", "--node <node>")
 	RootCmd.PersistentFlags().StringSliceVar(&config.Args.Nodes, "nodes", []string{}, "--nodes node1,node2")
