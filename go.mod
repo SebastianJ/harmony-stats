@@ -2,16 +2,12 @@ module github.com/SebastianJ/harmony-stats
 
 go 1.14
 
-replace github.com/harmony-one/go-lib => /Users/sebastianjohnsson/Programming/Golang/src/github.com/harmony-one/go-lib
-
 require (
-	github.com/SebastianJ/harmony-restaker v0.0.0-20200419145500-95ecee7f35a3
-	github.com/SebastianJ/harmony-stress v0.0.0-20200414090957-0745b7c281a6
-	github.com/davecgh/go-spew v1.1.1
+	github.com/blend/go-sdk v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/gookit/color v1.2.5
-	github.com/harmony-one/go-lib v0.0.0-20200427081459-6a463450ea03
+	github.com/harmony-one/go-lib v0.0.0-20200429035729-d8ac6c40609d
 	github.com/harmony-one/go-sdk v1.1.1-0.20200421150312-4c244dda08e8
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.0.0
