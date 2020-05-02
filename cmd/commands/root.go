@@ -39,6 +39,9 @@ func init() {
 	RootCmd.PersistentFlags().IntVar(&config.Args.Concurrency, "concurrency", 100, "<concurrency>")
 	RootCmd.PersistentFlags().BoolVar(&config.Args.Verbose, "verbose", false, "--verbose")
 	RootCmd.PersistentFlags().BoolVar(&config.Args.VerboseGoSDK, "verbose-go-sdk", false, "--verbose-go-sdk")
+	RootCmd.PersistentFlags().StringVar(&config.Args.Path, "path", ".", "<path>")
+	RootCmd.PersistentFlags().StringVar(&config.Args.Export, "export", "", "<path>")
+	RootCmd.PersistentFlags().StringVar(&config.Args.ExportPath, "export-path", "./exports", "<path>")
 
 	RootCmd.AddCommand(&cobra.Command{
 		Use:   "version",

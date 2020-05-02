@@ -8,11 +8,13 @@ import (
 
 // Config - general config
 type Config struct {
+	BasePath    string
 	Network     Network
 	Account     sdkAccounts.Account
 	Verbose     bool
 	Styling     Styling
 	Concurrency int
+	Export      Export
 }
 
 // Network - represents the network settings group
@@ -24,6 +26,12 @@ type Network struct {
 	Shards  int
 	API     sdkNetworkTypes.Network
 	Timeout int
+}
+
+// Export - export settings
+type Export struct {
+	Path   string
+	Format string
 }
 
 // Styling - represents settings for styling the log output

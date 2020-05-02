@@ -10,6 +10,9 @@ type PersistentFlags struct {
 	Concurrency  int
 	Verbose      bool
 	VerboseGoSDK bool
+	Path         string
+	Export       string
+	ExportPath   string
 }
 
 // TPSFlags tps related configuration flags
@@ -19,4 +22,17 @@ type TPSFlags struct {
 	To        int
 	Count     int
 	BlockTime int
+}
+
+// ValidatorFlags validator related configuration flags
+type ValidatorFlags struct {
+	Filter  Filter
+	Elected bool
+}
+
+// Filter - filter validators based on certain criteria
+type Filter struct {
+	Field string
+	Value string
+	Mode  string
 }

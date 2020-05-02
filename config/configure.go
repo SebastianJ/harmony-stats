@@ -3,6 +3,8 @@ package config
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/gookit/color"
@@ -21,6 +23,9 @@ var Args PersistentFlags
 // TPSArgs is a collection of TPS related flags parsed using Cobra
 var TPSArgs TPSFlags
 
+// ValidatorArgs is a collection of validator related flags parsed using Cobra
+var ValidatorArgs ValidatorFlags
+
 // Configure - configures the test suite tool using a combination of the YAML config file as well as command arguments
 func Configure() (err error) {
 	if err := configureNetworkConfig(); err != nil {
@@ -32,6 +37,10 @@ func Configure() (err error) {
 	}
 
 	ConfigureStylingConfig()
+
+	if err = configureExports(); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -104,6 +113,19 @@ func configureApplicationConfig() (err error) {
 
 	// Set the verbosity level of go-sdk
 	goSdkCommon.DebugRPC = Args.VerboseGoSDK
+
+	return nil
+}
+
+func configureExports() error {
+	Configuration.Export.Path = filepath.Join(Configuration.BasePath, Args.ExportPath)
+	if err := os.MkdirAll(Configuration.Export.Path, 0755); err != nil {
+		return err
+	}
+
+	if Args.Export != "" {
+		Configuration.Export.Format = Args.Export
+	}
 
 	return nil
 }

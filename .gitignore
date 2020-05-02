@@ -18,6 +18,9 @@
 # dist
 dist/
 
+# exports
+exports/
+
 # go mod
 go.mod.dev
 go.mod*.tmp
