@@ -3,7 +3,9 @@ package charts
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
+	"github.com/SebastianJ/harmony-stats/config"
 	chart "github.com/wcharczuk/go-chart"
 	"github.com/wcharczuk/go-chart/drawing"
 )
@@ -22,7 +24,13 @@ var (
 )
 
 // GenerateGraph - generate a graph using supplied data
-func GenerateGraph(fileName string, seriesTitle string, xAxisLabel string, yAxisLabel string, xValues []float64, yValues []float64, details []string) {
+func GenerateGraph(fileName string, seriesTitle string, xAxisLabel string, yAxisLabel string, xValues []float64, yValues []float64, details []string) error {
+	filePath := filepath.Join(config.Configuration.Export.Path, "charts", fileName)
+	dirPath, _ := filepath.Split(filePath)
+	if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
+		return err
+	}
+
 	mainSeries := chart.ContinuousSeries{
 		Name: seriesTitle,
 		Style: chart.Style{
@@ -89,9 +97,15 @@ func GenerateGraph(fileName string, seriesTitle string, xAxisLabel string, yAxis
 		graph.Elements = []chart.Renderable{DetailsBox(&graph, details, detailsStyle)}
 	}
 
-	f, _ := os.Create(fileName)
-	defer f.Close()
-	graph.Render(chart.PNG, f)
+	file, err := os.Create(filePath)
+	defer file.Close()
+	if err != nil {
+		return err
+	}
+
+	graph.Render(chart.PNG, file)
+
+	return nil
 }
 
 // DetailsBox adds a box with additional text

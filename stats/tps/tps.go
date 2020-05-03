@@ -120,10 +120,10 @@ func analyzeTPSForShard(shard uint32, parentWaitGroup *sync.WaitGroup) error {
 		return results[i].BlockNumber < results[j].BlockNumber
 	})
 
-	fileName := fmt.Sprintf("shard-%d-block-%d-to-%d.png", shard, fromBlockNumber, toBlockNumber)
+	fileName := fmt.Sprintf("tps/shard-%d-block-%d-to-%d.png", shard, fromBlockNumber, toBlockNumber)
 	xAxisData, yAxisData := convertBlockResultsToGraphData(results)
 
-	charts.GenerateGraph(
+	err = charts.GenerateGraph(
 		fileName,
 		"Transactions Per Second",
 		"Block #",
@@ -137,6 +137,10 @@ func analyzeTPSForShard(shard uint32, parentWaitGroup *sync.WaitGroup) error {
 			fmt.Sprintf("Blocks: %d - %d", fromBlockNumber, toBlockNumber),
 		},
 	)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -5,9 +5,11 @@ import (
 	"math"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/SebastianJ/harmony-stats/config"
 	"github.com/SebastianJ/harmony-stats/export"
+	"github.com/SebastianJ/harmony-stats/utils"
 	sdkDelegation "github.com/harmony-one/go-lib/staking/delegation"
 	sdkValidator "github.com/harmony-one/go-lib/staking/validator"
 	"github.com/harmony-one/harmony/numeric"
@@ -60,7 +62,7 @@ func Analyze() error {
 	case "csv":
 		csvPath, err := exportToCSV(filteredValidatorResults)
 		if err != nil {
-			fmt.Println("Failed to export validator data to CSV")
+			return err
 		} else if csvPath != "" {
 			fmt.Printf("Successfully exported validator data to %s\n", csvPath)
 		}
@@ -175,6 +177,8 @@ func lookupValidatorBalance(validatorResult ValidatorResult, validatorsChannel c
 }
 
 func exportToCSV(validatorResults []ValidatorResult) (string, error) {
+	fileName := fmt.Sprintf("validators/validators-%s-UTC.csv", utils.FormattedTimeString(time.Now().UTC()))
+
 	rows := [][]string{}
 
 	headers := []string{
@@ -224,7 +228,7 @@ func exportToCSV(validatorResults []ValidatorResult) (string, error) {
 		}
 	}
 
-	csvPath, err := export.ExportCSV(rows)
+	csvPath, err := export.ExportCSV(fileName, rows)
 	if err != nil {
 		return "", err
 	}

@@ -2,26 +2,15 @@ package export
 
 import (
 	"encoding/csv"
-	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/SebastianJ/harmony-stats/config"
-	"github.com/SebastianJ/harmony-stats/utils"
 )
-
-var (
-	timeFormat string = "2006-01-02 15:04:05 UTC"
-)
-
-func generateFileName(theTime time.Time, ext string) string {
-	return fmt.Sprintf("validators-%s-UTC.%s", utils.FormattedTimeString(theTime), ext)
-}
 
 // ExportCSV - exports test suite results as csv
-func ExportCSV(rows [][]string) (string, error) {
-	filePath, err := writeCSVToFile(rows)
+func ExportCSV(fileName string, rows [][]string) (string, error) {
+	filePath, err := writeCSVToFile(fileName, rows)
 	if err != nil {
 		return "", err
 	}
@@ -29,9 +18,13 @@ func ExportCSV(rows [][]string) (string, error) {
 	return filePath, nil
 }
 
-func writeCSVToFile(rows [][]string) (string, error) {
-	fileName := generateFileName(time.Now().UTC(), "csv")
+func writeCSVToFile(fileName string, rows [][]string) (string, error) {
 	filePath := filepath.Join(config.Configuration.Export.Path, fileName)
+	dirPath, _ := filepath.Split(filePath)
+	if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
+		return "", err
+	}
+
 	file, err := os.Create(filePath)
 	if err != nil {
 		return "", err
