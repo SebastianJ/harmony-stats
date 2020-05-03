@@ -26,8 +26,9 @@ type TPSFlags struct {
 
 // ValidatorFlags validator related configuration flags
 type ValidatorFlags struct {
-	Filter  Filter
-	Elected bool
+	Filter   Filter
+	Elected  bool
+	Balances bool
 }
 
 // Filter - filter validators based on certain criteria

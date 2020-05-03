@@ -32,6 +32,7 @@ func init() {
 	cmdValidators.PersistentFlags().StringVar(&config.ValidatorArgs.Filter.Value, "filter.value", "", "--filter.value <value>")
 	cmdValidators.PersistentFlags().StringVar(&config.ValidatorArgs.Filter.Mode, "filter.mode", "contains", "--filter.mode <mode>")
 	cmdValidators.PersistentFlags().BoolVar(&config.ValidatorArgs.Elected, "elected", false, "--elected")
+	cmdValidators.PersistentFlags().BoolVar(&config.ValidatorArgs.Balances, "balances", false, "--balances")
 	cmdValidators.AddCommand(cmdAnalyzeValidators)
 
 	RootCmd.AddCommand(cmdValidators)

@@ -17,59 +17,33 @@ import (
 type ValidatorResult struct {
 	Result  sdkValidator.RPCValidatorResult
 	Balance numeric.Dec
+	Error   error
 }
 
 // Analyze - analyze validators
 func Analyze() error {
 	fmt.Printf("Looking up validator statistics - network: %s, mode: %s, node: %s\n", config.Configuration.Network.Name, config.Configuration.Network.Mode, config.Configuration.Network.Node)
 
-	pageSize := 10
-	pages := 1
-	var validators []string
-	var err error
-	message := ""
-	rpcClient, err := config.Configuration.Network.API.RPCClient(0)
+	rpcValidators, err := sdkValidator.AllInformation(config.Configuration.Network.API.NodeAddress(0), true)
 	if err != nil {
 		return err
 	}
 
 	if config.ValidatorArgs.Elected {
-		message = " elected"
-		validators, err = sdkValidator.AllElected(rpcClient)
-	} else {
-		validators, err = sdkValidator.All(rpcClient)
+		rpcValidators = applyElectedFilter(rpcValidators)
 	}
 
-	if err != nil {
-		return err
+	validatorResults := []ValidatorResult{}
+	for _, rpcValidatorResult := range rpcValidators {
+		validatorResults = append(validatorResults, ValidatorResult{Result: rpcValidatorResult})
 	}
 
-	validatorCount := len(validators)
-	fmt.Println(fmt.Sprintf("Found a total of %d%s validators to look up delegation information for", validatorCount, message))
-	pages = calculatePageCount(validatorCount, pageSize)
-	totalChecked := 0
-
-	validatorsChannel := make(chan ValidatorResult, validatorCount)
-	var waitGroup sync.WaitGroup
-
-	for page := 0; page < pages; page++ {
-		for i := 0; i < pageSize; i++ {
-			position, ok := processable(page, pageSize, i, validatorCount)
-			if ok {
-				waitGroup.Add(1)
-				address := validators[position]
-				go lookupValidator(address, validatorsChannel, &waitGroup)
-				totalChecked++
-			}
-		}
-
-		waitGroup.Wait()
+	if config.ValidatorArgs.Balances {
+		validatorResults = lookupValidatorBalances(validatorResults)
 	}
-
-	close(validatorsChannel)
 
 	filteredValidatorResults := []ValidatorResult{}
-	for validatorResult := range validatorsChannel {
+	for _, validatorResult := range validatorResults {
 		if applyFilters() {
 			if matchesFilter(validatorResult) {
 				filteredValidatorResults = append(filteredValidatorResults, validatorResult)
@@ -79,9 +53,8 @@ func Analyze() error {
 		}
 	}
 
-	filterCount := len(filteredValidatorResults)
-	fmt.Printf("Total checked number of validators: %d\n", totalChecked)
-	fmt.Printf("Total number of validators matching filter: %d\n", filterCount)
+	fmt.Printf("Total checked number of validators: %d\n", len(rpcValidators))
+	fmt.Printf("Total number of validators matching filter: %d\n", len(filteredValidatorResults))
 
 	switch strings.ToLower(config.Configuration.Export.Format) {
 	case "csv":
@@ -96,6 +69,18 @@ func Analyze() error {
 	}
 
 	return nil
+}
+
+func applyElectedFilter(validatorResults []sdkValidator.RPCValidatorResult) []sdkValidator.RPCValidatorResult {
+	electedValidators := []sdkValidator.RPCValidatorResult{}
+
+	for _, validatorResult := range validatorResults {
+		if validatorResult.CurrentlyInCommittee {
+			electedValidators = append(electedValidators, validatorResult)
+		}
+	}
+
+	return electedValidators
 }
 
 func applyFilters() bool {
@@ -128,20 +113,86 @@ func matchesFilter(validatorResult ValidatorResult) bool {
 	return true
 }
 
-func exportToCSV(validatorResults []ValidatorResult) (string, error) {
-	rows := [][]string{
-		{
-			"Name",
-			"Address",
-			"Identity",
-			"BLS Key Count",
-			"BLS Keys",
-			"Self Delegation",
-			"Total Delegation",
-			"Lifetime Rewards",
-			"Wallet Balance",
-		},
+func calculatePageCount(totalCount int, pageSize int) int {
+	if totalCount > 0 {
+		pageNumber := math.RoundToEven(float64(totalCount) / float64(pageSize))
+		if math.Mod(float64(totalCount), float64(pageSize)) > 0 {
+			return int(pageNumber) + 1
+		}
+
+		return int(pageNumber)
+	} else {
+		return 0
 	}
+}
+
+func processable(page int, pageSize int, index int, totalCount int) (position int, ok bool) {
+	position = ((page * pageSize) + index)
+	ok = position <= (totalCount - 1)
+	return position, ok
+}
+
+func lookupValidatorBalances(validatorResults []ValidatorResult) []ValidatorResult {
+	validatorsChannel := make(chan ValidatorResult, len(validatorResults))
+	var waitGroup sync.WaitGroup
+
+	for index, validatorResult := range validatorResults {
+		waitGroup.Add(1)
+		go lookupValidatorBalance(validatorResult, validatorsChannel, &waitGroup)
+
+		// Wait every <concurrency count> number of blocks before proceeding to queue up more goroutines
+		if index%config.Configuration.Concurrency == 0 {
+			waitGroup.Wait()
+		}
+	}
+
+	waitGroup.Wait()
+	close(validatorsChannel)
+
+	validatorResults = []ValidatorResult{}
+
+	for validatorResult := range validatorsChannel {
+		validatorResults = append(validatorResults, validatorResult)
+	}
+
+	return validatorResults
+}
+
+func lookupValidatorBalance(validatorResult ValidatorResult, validatorsChannel chan<- ValidatorResult, waitGroup *sync.WaitGroup) {
+	defer waitGroup.Done()
+
+	fmt.Printf("Looking up balance for validator wallet %s\n", validatorResult.Result.Validator.Address)
+
+	totalBalance, err := config.Configuration.Network.API.GetTotalBalance(validatorResult.Result.Validator.Address)
+	if err != nil {
+		validatorResult.Error = err
+		validatorsChannel <- validatorResult
+		return
+	}
+
+	validatorResult.Balance = totalBalance
+	validatorsChannel <- validatorResult
+}
+
+func exportToCSV(validatorResults []ValidatorResult) (string, error) {
+	rows := [][]string{}
+
+	headers := []string{
+		"Name",
+		"Address",
+		"Identity",
+		"BLS Key Count",
+		"BLS Keys",
+		"Self Delegation",
+		"Total Delegation",
+		"Lifetime Rewards",
+	}
+
+	if config.ValidatorArgs.Balances {
+		headers = append(headers, "Wallet Balance")
+	}
+
+	rows = append(rows, headers)
 
 	if len(validatorResults) > 0 {
 		for _, validatorResult := range validatorResults {
@@ -163,7 +214,10 @@ func exportToCSV(validatorResults []ValidatorResult) (string, error) {
 				fmt.Sprintf("%f", selfDelegation.Amount),
 				fmt.Sprintf("%f", validatorResult.Result.TotalDelegation),
 				fmt.Sprintf("%f", validatorResult.Result.Lifetime.RewardAccumulated),
-				fmt.Sprintf("%f", validatorResult.Balance),
+			}
+
+			if config.ValidatorArgs.Balances && !validatorResult.Balance.IsNil() {
+				row = append(row, fmt.Sprintf("%f", validatorResult.Balance))
 			}
 
 			rows = append(rows, row)
@@ -176,43 +230,4 @@ func exportToCSV(validatorResults []ValidatorResult) (string, error) {
 	}
 
 	return csvPath, nil
-}
-
-func calculatePageCount(totalCount int, pageSize int) int {
-	if totalCount > 0 {
-		pageNumber := math.RoundToEven(float64(totalCount) / float64(pageSize))
-		if math.Mod(float64(totalCount), float64(pageSize)) > 0 {
-			return int(pageNumber) + 1
-		}
-
-		return int(pageNumber)
-	} else {
-		return 0
-	}
-}
-
-func processable(page int, pageSize int, index int, totalCount int) (position int, ok bool) {
-	position = ((page * pageSize) + index)
-	ok = position <= (totalCount - 1)
-	return position, ok
-}
-
-func lookupValidator(address string, validatorsChannel chan<- ValidatorResult, waitGroup *sync.WaitGroup) {
-	defer waitGroup.Done()
-	result, err := sdkValidator.Information(config.Configuration.Network.Node, address)
-	if err != nil {
-		validatorsChannel <- ValidatorResult{}
-		return
-	}
-
-	totalBalance, err := config.Configuration.Network.API.GetTotalBalance(address)
-	if err != nil {
-		validatorsChannel <- ValidatorResult{}
-		return
-	}
-
-	validatorsChannel <- ValidatorResult{
-		Result:  result,
-		Balance: totalBalance,
-	}
 }
