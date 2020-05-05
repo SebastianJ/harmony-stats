@@ -100,6 +100,8 @@ github.com/eapache/go-resiliency v1.1.0/go.mod h1:kFI+JgMyC7bLPUVY133qvEBtVayf5m
 github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21/go.mod h1:+020luEh2TKB4/GOp8oxxtq0Daoen/Cii55CzbTV6DU=
 github.com/eapache/queue v1.1.0/go.mod h1:6eCeP0CKFpHLu8blIFXhExK/dRa7WDZfr6jVFPTqq+I=
 github.com/edsrzf/mmap-go v1.0.0/go.mod h1:YO35OhQPt3KJa3ryjFM5Bs14WD66h8eGKpfaBNrHW5M=
+github.com/elliotchance/orderedmap v1.2.2 h1:U5tjNwkj4PjuySqnbkIiiGrj8Ovw83domXHeLeb7OgY=
+github.com/elliotchance/orderedmap v1.2.2/go.mod h1:8hdSl6jmveQw8ScByd3AaNHNk51RhbTazdqtTty+NFw=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.4/go.mod h1:6rpuAdCZL397s3pYoYcLgu1mIlRU8Am5FuJP05cCM98=
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
@@ -221,13 +223,13 @@ github.com/harmony-one/bls v0.0.6 h1:KG4q4JwdkPf3DtFvJmAgMRWT6QdY1A/wqN/Qt+S4VaQ
 github.com/harmony-one/bls v0.0.6/go.mod h1:ML9osB/z3hR9WAYZVj7qH+IP6oaPRPmshDbxrQyia7g=
 github.com/harmony-one/bls v0.0.7-0.20191214005344-88c23f91a8a9 h1:mG6rcfYadQAkWJn5mnfRnJ4plNf2XNvuadiirLcsmr0=
 github.com/harmony-one/bls v0.0.7-0.20191214005344-88c23f91a8a9/go.mod h1:ML9osB/z3hR9WAYZVj7qH+IP6oaPRPmshDbxrQyia7g=
-github.com/harmony-one/go-lib v0.0.0-20200503082117-6f81b426311e h1:UFpd/H0GVr7EPC4bRFkai5WDKTNxadWKhLXXnitbaGU=
-github.com/harmony-one/go-lib v0.0.0-20200503082117-6f81b426311e/go.mod h1:2iqDuqxmrQnoLDLFOx1oxjAgScuN0cCZk23C7T7Rkcw=
+github.com/harmony-one/go-lib v0.0.0-20200505053646-ac443418b1ae h1:+H9u9uxj3gFmNfBLu4/bFD6dWyyRADOuBY2t/FFg1Ec=
+github.com/harmony-one/go-lib v0.0.0-20200505053646-ac443418b1ae/go.mod h1:qDc4qgmr+NY55f0A/zA/eCUyUG6nRijt0og2vuJoHF0=
 github.com/harmony-one/go-sdk v1.1.1-0.20200421150312-4c244dda08e8 h1:fkKU5QZLutgj0fSnKTTVGYCCApIaqAvEkg2XYODfEbk=
 github.com/harmony-one/go-sdk v1.1.1-0.20200421150312-4c244dda08e8/go.mod h1:VijWa1mMfMjRBh5jnCfjcsJngLsvnVDlSshHti4Ion0=
 github.com/harmony-one/harmony v1.9.1-0.20200407004902-1ca1f0d67861/go.mod h1:qYafkYPsjNqZEvfucxCLweU8rgX6GPHKEa4CpHaet6E=
-github.com/harmony-one/harmony v1.9.1-0.20200502233035-2ccc20be2b27 h1:wbHEpBHVoY2/ueAZSDQ7M4bDBTvh5z0cnbMaGpGCleU=
-github.com/harmony-one/harmony v1.9.1-0.20200502233035-2ccc20be2b27/go.mod h1:z59iKtxB4fJXMXfi7UPaXtNylTwVuxDSeOlTCtaFNdY=
+github.com/harmony-one/harmony v1.9.1-0.20200504060401-22822e1c1eb0 h1:M8nbf3aKAH/8bFdQRZyk44GAplPS3+UDTLVilhKVL1s=
+github.com/harmony-one/harmony v1.9.1-0.20200504060401-22822e1c1eb0/go.mod h1:z59iKtxB4fJXMXfi7UPaXtNylTwVuxDSeOlTCtaFNdY=
 github.com/harmony-one/taggedrlp v0.1.4 h1:RZ+qy0VCzT+d/mTfq23gH3an5tSvxOhg6AddLDO6tKw=
 github.com/harmony-one/taggedrlp v0.1.4/go.mod h1:osO5TRXLKdgCP+oj2J9qfqhywMOOA+4nP5q+o8nDSYA=
 github.com/harmony-one/vdf v0.0.0-20190924175951-620379da8849/go.mod h1:EgNU7X5HLNBBho+OqCm1A1NrpD6xb1SHfi9pMCYaKKw=

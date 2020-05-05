@@ -2,7 +2,6 @@ package validators
 
 import (
 	"fmt"
-	"math"
 	"strings"
 	"sync"
 	"time"
@@ -26,17 +25,13 @@ type ValidatorResult struct {
 func Analyze() error {
 	fmt.Printf("Looking up validator statistics - network: %s, mode: %s, node: %s\n", config.Configuration.Network.Name, config.Configuration.Network.Mode, config.Configuration.Network.Node)
 
-	rpcValidators, err := sdkValidator.AllInformation(config.Configuration.Network.API.NodeAddress(0), true)
+	validators, err := Filtered()
 	if err != nil {
 		return err
 	}
 
-	if config.ValidatorArgs.Elected {
-		rpcValidators = applyElectedFilter(rpcValidators)
-	}
-
 	validatorResults := []ValidatorResult{}
-	for _, rpcValidatorResult := range rpcValidators {
+	for _, rpcValidatorResult := range validators {
 		validatorResults = append(validatorResults, ValidatorResult{Result: rpcValidatorResult})
 	}
 
@@ -44,23 +39,12 @@ func Analyze() error {
 		validatorResults = lookupValidatorBalances(validatorResults)
 	}
 
-	filteredValidatorResults := []ValidatorResult{}
-	for _, validatorResult := range validatorResults {
-		if applyFilters() {
-			if matchesFilter(validatorResult) {
-				filteredValidatorResults = append(filteredValidatorResults, validatorResult)
-			}
-		} else {
-			filteredValidatorResults = append(filteredValidatorResults, validatorResult)
-		}
-	}
-
-	fmt.Printf("Total checked number of validators: %d\n", len(rpcValidators))
-	fmt.Printf("Total number of validators matching filter: %d\n", len(filteredValidatorResults))
+	fmt.Printf("Total checked number of validators: %d\n", len(validatorResults))
+	fmt.Printf("Total number of validators matching filter: %d\n", len(validatorResults))
 
 	switch strings.ToLower(config.Configuration.Export.Format) {
 	case "csv":
-		csvPath, err := exportToCSV(filteredValidatorResults)
+		csvPath, err := exportToCSV(validatorResults)
 		if err != nil {
 			return err
 		} else if csvPath != "" {
@@ -71,67 +55,6 @@ func Analyze() error {
 	}
 
 	return nil
-}
-
-func applyElectedFilter(validatorResults []sdkValidator.RPCValidatorResult) []sdkValidator.RPCValidatorResult {
-	electedValidators := []sdkValidator.RPCValidatorResult{}
-
-	for _, validatorResult := range validatorResults {
-		if validatorResult.CurrentlyInCommittee {
-			electedValidators = append(electedValidators, validatorResult)
-		}
-	}
-
-	return electedValidators
-}
-
-func applyFilters() bool {
-	return config.ValidatorArgs.Filter.Field != "" && config.ValidatorArgs.Filter.Value != "" && config.ValidatorArgs.Filter.Mode != ""
-}
-
-func matchesFilter(validatorResult ValidatorResult) bool {
-	currentValue := ""
-
-	switch strings.ToLower(config.ValidatorArgs.Filter.Field) {
-	case "website":
-		currentValue = validatorResult.Result.Validator.Website
-	case "identity":
-		currentValue = validatorResult.Result.Validator.Identity
-	default:
-		currentValue = ""
-	}
-
-	currentValue = strings.ToLower(currentValue)
-	expectedValue := strings.ToLower(config.ValidatorArgs.Filter.Value)
-
-	if currentValue != "" {
-		if config.ValidatorArgs.Filter.Mode == "equals" {
-			return currentValue == expectedValue
-		} else if config.ValidatorArgs.Filter.Mode == "contains" {
-			return strings.Contains(currentValue, expectedValue)
-		}
-	}
-
-	return true
-}
-
-func calculatePageCount(totalCount int, pageSize int) int {
-	if totalCount > 0 {
-		pageNumber := math.RoundToEven(float64(totalCount) / float64(pageSize))
-		if math.Mod(float64(totalCount), float64(pageSize)) > 0 {
-			return int(pageNumber) + 1
-		}
-
-		return int(pageNumber)
-	} else {
-		return 0
-	}
-}
-
-func processable(page int, pageSize int, index int, totalCount int) (position int, ok bool) {
-	position = ((page * pageSize) + index)
-	ok = position <= (totalCount - 1)
-	return position, ok
 }
 
 func lookupValidatorBalances(validatorResults []ValidatorResult) []ValidatorResult {

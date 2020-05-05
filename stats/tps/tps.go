@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/SebastianJ/harmony-stats/blocks"
 	"github.com/SebastianJ/harmony-stats/charts"
 	"github.com/SebastianJ/harmony-stats/config"
 	sdkRPC "github.com/harmony-one/go-lib/rpc"
@@ -15,15 +16,6 @@ import (
 var (
 	targetShards []uint32
 )
-
-// BlockResult - statistics for each block
-type BlockResult struct {
-	ShardID     uint32
-	BlockNumber uint64
-	TxCount     uint64
-	TPS         float64
-	Successful  bool
-}
 
 // AnalyzeTPS - analyze TPS based on reported txs per every block
 func AnalyzeTPS() error {
@@ -83,7 +75,7 @@ func analyzeTPSForShard(shard uint32, parentWaitGroup *sync.WaitGroup) error {
 	currentBlockNumber := fromBlockNumber
 	totalChecked := 0
 	var innerWaitGroup sync.WaitGroup
-	blockResults := make(chan BlockResult, toBlockNumber)
+	blockResults := make(chan blocks.BlockResult, toBlockNumber)
 
 	for {
 		if currentBlockNumber < toBlockNumber {
@@ -107,7 +99,7 @@ func analyzeTPSForShard(shard uint32, parentWaitGroup *sync.WaitGroup) error {
 
 	close(blockResults)
 
-	results := []BlockResult{}
+	results := []blocks.BlockResult{}
 
 	for blockResult := range blockResults {
 		if blockResult.Successful {
@@ -123,7 +115,7 @@ func analyzeTPSForShard(shard uint32, parentWaitGroup *sync.WaitGroup) error {
 	fileName := fmt.Sprintf("tps/shard-%d-block-%d-to-%d.png", shard, fromBlockNumber, toBlockNumber)
 	xAxisData, yAxisData := convertBlockResultsToGraphData(results)
 
-	err = charts.GenerateGraph(
+	err = charts.GenerateContinousChart(
 		fileName,
 		"Transactions Per Second",
 		"Block #",
@@ -137,7 +129,6 @@ func analyzeTPSForShard(shard uint32, parentWaitGroup *sync.WaitGroup) error {
 			fmt.Sprintf("Blocks: %d - %d", fromBlockNumber, toBlockNumber),
 		},
 	)
-
 	if err != nil {
 		return err
 	}
@@ -145,9 +136,9 @@ func analyzeTPSForShard(shard uint32, parentWaitGroup *sync.WaitGroup) error {
 	return nil
 }
 
-func blockStatistics(node string, shard uint32, blockNumber uint64, blockResults chan<- BlockResult, waitGroup *sync.WaitGroup) {
+func blockStatistics(node string, shard uint32, blockNumber uint64, blockResults chan<- blocks.BlockResult, waitGroup *sync.WaitGroup) {
 	defer waitGroup.Done()
-	blockResult := BlockResult{}
+	blockResult := blocks.BlockResult{}
 
 	fmt.Printf("Checking tx count and tps for block number %d in shard %d (node: %s) ...\n", blockNumber, shard, node)
 
@@ -188,7 +179,7 @@ func setTargetShards() error {
 	return nil
 }
 
-func convertBlockResultsToGraphData(blockResults []BlockResult) (xValues []float64, yValues []float64) {
+func convertBlockResultsToGraphData(blockResults []blocks.BlockResult) (xValues []float64, yValues []float64) {
 	xValues = []float64{}
 	yValues = []float64{}
 
